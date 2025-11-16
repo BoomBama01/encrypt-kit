@@ -37,8 +37,6 @@
       animation: fadeIn 1s ease;
     }
 
-    .subtitle { text-align:center; font-size:16px; opacity:.8; margin-bottom:20px; }
-
     .container { width:90%; max-width:800px; margin:auto; padding:20px 0; flex: 1; }
 
     .box {
@@ -115,9 +113,7 @@
       opacity: 0;
       transition: opacity 0.3s ease;
     }
-
     .matrix-rain.active { opacity: 1; }
-
     .matrix-rain canvas { width: 100%; height: 100%; display: block; }
 
     .glitch-effect {
@@ -136,7 +132,6 @@
       animation: glitch-scan 0.6s steps(5) infinite;
       transition: opacity 0.3s ease;
     }
-
     .glitch-effect.active { opacity: 1; }
 
     @keyframes glitch-scan {
@@ -144,14 +139,7 @@
       100% { transform: translateY(100%); }
     }
 
-    .about-trigger {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 120px;
-      margin: 40px 0;
-    }
-
+    .about-trigger { display: flex; justify-content: center; align-items: center; min-height: 120px; margin: 40px 0; }
     .about-trigger button {
       background: rgba(255,255,255,0.08);
       border: 1px solid var(--border);
@@ -163,7 +151,6 @@
       cursor: pointer;
       transition: all 0.3s;
     }
-
     .about-trigger button:hover {
       background: rgba(255,255,255,0.15);
       transform: translateY(-2px);
@@ -171,21 +158,13 @@
     }
 
     .about-page {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.35);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.5s ease, visibility 0.5s ease;
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.35);
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9999; opacity: 0; visibility: hidden;
+      transition: opacity .5s ease, visibility .5s ease;
     }
-
     .about-page.open { opacity: 1; visibility: visible; }
 
     .about-content {
@@ -193,60 +172,40 @@
       border: 1px solid var(--border);
       border-radius: 20px;
       padding: 40px;
-      max-width: 500px;
-      width: 90%;
+      max-width: 500px; width: 90%;
       text-align: center;
       transform: scale(0.8);
-      transition: transform 0.5s ease;
-      box-shadow: 0 20px 50px rgba(0, 170, 255, 0.3);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      transition: transform .5s ease;
+      box-shadow: 0 20px 50px rgba(0,170,255,0.3);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
     }
-
     .about-page.open .about-content { transform: scale(1); }
 
     .about-content h3 {
-      font-size: 28px;
-      margin-bottom: 20px;
+      font-size: 28px; margin-bottom: 20px;
       background: linear-gradient(135deg, #00aaff, #00ffaa);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     }
-
-    .about-content p { margin: 14px 0; font-size: 16px; line-height: 1.6; }
-
-    .about-content .label { font-weight: 600; color: #00e0ff; }
-
-    .about-content a { color: #00ffaa; text-decoration: none; }
-    .about-content a:hover { text-decoration: underline; }
+    .about-content p { margin:14px 0; font-size:16px; line-height:1.6; }
+    .about-content .label { font-weight:600; color:#00e0ff; }
+    .about-content a { color:#00ffaa; text-decoration:none; }
+    .about-content a:hover { text-decoration:underline; }
 
     .close-about {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background: rgba(255,255,255,0.1);
-      border: none;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      color: white;
-      font-size: 20px;
-      cursor: pointer;
-      transition: 0.3s;
+      position:absolute; top:20px; right:20px;
+      background:rgba(255,255,255,0.1); border:none;
+      width:40px; height:40px; border-radius:50%;
+      color:white; font-size:20px; cursor:pointer;
+      transition:0.3s;
     }
+    .close-about:hover { background:rgba(255,255,255,0.2); transform:rotate(90deg); }
 
-    .close-about:hover {
-      background: rgba(255,255,255,0.2);
-      transform: rotate(90deg);
-    }
-
-    footer { text-align: center; padding: 30px; font-size: 14px; opacity: 0.6; }
+    footer { text-align:center; padding:30px; font-size:14px; opacity:0.6; }
   </style>
 </head>
 <body>
 
   <h1>Secret Encryptor Pro</h1>
-  <!-- Subtitle removed as requested -->
 
   <div class="container">
 
@@ -285,12 +244,12 @@
 
   </div>
 
-  <!-- Centered About Button -->
+  <!-- About Button -->
   <div class="about-trigger">
     <button id="aboutBtn">About Developer</button>
   </div>
 
-  <!-- About Page -->
+  <!-- About Modal -->
   <div class="about-page" id="aboutPage">
     <div class="about-content">
       <button class="close-about" id="closeAbout">X</button>
@@ -348,7 +307,7 @@
       self.onmessage = function(e) {
         const {id, action, msg, pw, enc} = e.data;
         try {
-          let result = action === 'encrypt' ? encrypt({msg, pw}) : decrypt({enc, pw});
+          const result = action === 'encrypt' ? encrypt({msg, pw}) : decrypt({enc, pw});
           self.postMessage({id, success: true, result});
         } catch (err) {
           self.postMessage({id, success: false, error: err.message || 'Failed'});
@@ -360,8 +319,7 @@
     const worker = new Worker(URL.createObjectURL(blob));
     let requestId = 0;
     const pending = {};
-    let lastBase64 = '';
-    let lastPlain = '';
+    let lastBase64 = '';  // Stores the actual encrypted payload
 
     function hashToCode(str) {
       let h = 0;
@@ -376,22 +334,25 @@
       const task = pending[id];
       if (!task) return;
 
+      task.btn.classList.remove('loading');
+
       if (success) {
         if (task.isEncrypt) {
           lastBase64 = result;
-          lastPlain  = document.getElementById('plainText').value.trim();
           const code = hashToCode(result + document.getElementById('passwordEnc').value);
           task.output.value = code;
+          showStatus(task.status, 'Encrypted!', 'success');
+          stopMatrixRain();
         } else {
           task.output.value = result;
+          showStatus(task.status, 'Decrypted!', 'success');
+          stopGlitch();
         }
-        showStatus(task.status, task.successMsg, 'success');
-        if (task.onSuccess) task.onSuccess();
       } else {
         showStatus(task.status, error, 'error');
-        if (task.onSuccess) task.onSuccess();
+        if (task.isEncrypt) stopMatrixRain();
+        else stopGlitch();
       }
-      task.btn.classList.remove('loading');
       delete pending[id];
     };
   </script>
@@ -411,6 +372,7 @@
       });
     }
 
+    // Matrix Rain
     let matrixInterval;
     function startMatrixRain() {
       const canvas = document.createElement('canvas');
@@ -423,8 +385,7 @@
       const matrix = "ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789@#$%^&*()*&^%+-/~{[|`]}";
       const fontSize = 14;
       const columns = canvas.width / fontSize;
-      const drops = [];
-      for (let i = 0; i < columns; i++) drops[i] = Math.floor(Math.random() * -100);
+      const drops = Array(Math.floor(columns)).fill(1);
 
       function draw() {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
@@ -455,6 +416,7 @@
     function startGlitch() { document.getElementById('glitchEffect').classList.add('active'); }
     function stopGlitch() { document.getElementById('glitchEffect').classList.remove('active'); }
 
+    // Encrypt Button
     document.getElementById('encryptBtn').onclick = () => {
       const msg = document.getElementById('plainText').value.trim();
       const pw = document.getElementById('passwordEnc').value;
@@ -470,17 +432,13 @@
       startMatrixRain();
 
       const id = ++requestId;
-      pending[id] = {
-        isEncrypt: true,
-        output, status, btn,
-        successMsg: 'Encrypted!',
-        onSuccess: stopMatrixRain
-      };
+      pending[id] = { isEncrypt: true, output, status, btn };
       worker.postMessage({id, action: 'encrypt', msg, pw});
     };
 
+    // Decrypt Button
     document.getElementById('decryptBtn').onclick = () => {
-      const input = document.getElementById('encryptedInput').value;
+      const input = document.getElementById('encryptedInput').value.trim();
       const pw = document.getElementById('passwordDec').value;
       const output = document.getElementById('decryptedOutput');
       const status = document.getElementById('decryptStatus');
@@ -496,17 +454,18 @@
       startGlitch();
 
       const expected = hashToCode(lastBase64 + pw);
-      if (digits === expected && lastBase64) {
-        const id = ++requestId;
-        pending[id] = { output, status, btn, successMsg: 'Decrypted!', onSuccess: stopGlitch };
-        worker.postMessage({id, action: 'decrypt', enc: lastBase64, pw});
-      } else {
+      if (!lastBase64 || digits !== expected) {
         btn.classList.remove('loading');
         stopGlitch();
-        showStatus(status, 'Wrong code or password', 'error');
+        return showStatus(status, 'Wrong code or password', 'error');
       }
+
+      const id = ++requestId;
+      pending[id] = { isEncrypt: false, output, status, btn };
+      worker.postMessage({id, action: 'decrypt', enc: lastBase64, pw});
     };
 
+    // Copy Buttons
     document.getElementById('copyEncBtn').onclick = () => {
       const text = document.getElementById('encryptedOutput').value;
       if (!text) return showStatus(document.getElementById('encryptStatus'), 'Nothing to copy', 'error');
@@ -519,10 +478,11 @@
       copyText(text, document.getElementById('decryptStatus'));
     };
 
+    // Share Button
     document.getElementById('shareBtn').onclick = async () => {
       const code = document.getElementById('encryptedOutput').value.trim();
       const password = document.getElementById('passwordEnc').value;
-      const siteUrl = 'https://encryptionkitt.netlify.app/';  <!-- UPDATED URL -->
+      const siteUrl = 'https://encryptionkiit.netlify.app/';
 
       if (!code) return showStatus(document.getElementById('encryptStatus'), 'Encrypt first', 'error');
 
@@ -530,7 +490,7 @@
 
       if (navigator.share) {
         try {
-          await navigator.share({title: 'Encrypted Message', text: shareText});
+          await navigator.share({ title: 'Encrypted Message', text: shareText });
           showStatus(document.getElementById('encryptStatus'), 'Shared!', 'success');
         } catch {
           fallbackCopy(shareText);
@@ -548,6 +508,7 @@
       });
     }
 
+    // Auto-resize textareas
     document.querySelectorAll('textarea').forEach(ta => {
       ta.addEventListener('input', () => {
         ta.style.height = 'auto';
@@ -555,13 +516,24 @@
       });
     });
 
+    // About Modal
     const aboutBtn = document.getElementById('aboutBtn');
     const aboutPage = document.getElementById('aboutPage');
     const closeAbout = document.getElementById('closeAbout');
 
-    aboutBtn.addEventListener('click', () => aboutPage.classList.add('open'));
-    closeAbout.addEventListener('click', () => aboutPage.classList.remove('open'));
-    aboutPage.addEventListener('click', e => { if (e.target === aboutPage) aboutPage.classList.remove('open'); });
+    aboutBtn.addEventListener('click', () => {
+      aboutPage.classList.add('open');
+    });
+
+    closeAbout.addEventListener('click', () => {
+      aboutPage.classList.remove('open');
+    });
+
+    aboutPage.addEventListener('click', (e) => {
+      if (e.target === aboutPage) {
+        aboutPage.classList.remove('open');
+      }
+    });
   </script>
 </body>
 </html>
