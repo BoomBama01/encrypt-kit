@@ -177,7 +177,7 @@
       transform: scale(0.8);
       transition: transform .5s ease;
       box-shadow: 0 20px 50px rgba(0,170,255,0.3);
-      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: 16px; -webkit-backdrop-filter: blur(16px);
     }
     .about-page.open .about-content { transform: scale(1); }
 
@@ -194,7 +194,7 @@
     .close-about {
       position:absolute; top:20px; right:20px;
       background:rgba(255,255,255,0.1); border:none;
-      width:40px; height:40px; border-radius:50%;
+      width:40px; height:40px; border:50%;
       color:white; font-size:20px; cursor:pointer;
       transition:0.3s;
     }
@@ -217,7 +217,7 @@
       <div class="btn-group">
         <button class="btn-primary" id="encryptBtn">Encrypt</button>
         <button class="btn-success" id="copyEncBtn">Copy</button>
-        <button class="btn-secondary" id="shareBtn">Share</button>
+        <button class="btn-secondary" id="shareBtn">Share Link</button>
       </div>
       <div class="output-wrapper">
         <div class="matrix-rain" id="matrixRain"></div>
@@ -229,7 +229,7 @@
     <!-- Decrypt -->
     <div class="box">
       <h2>Decrypt Message</h2>
-      <textarea id="encryptedInput" placeholder="Paste 6-7 digit code (spaces ignored)..."></textarea>
+      <textarea id="encryptedInput" placeholder="Encrypted data will auto-fill from link..."></textarea>
       <input type="password" id="passwordDec" placeholder="Enter password">
       <div class="btn-group">
         <button class="btn-primary" id="decryptBtn">Decrypt</button>
@@ -319,7 +319,7 @@
     const worker = new Worker(URL.createObjectURL(blob));
     let requestId = 0;
     const pending = {};
-    let lastBase64 = '';  // Stores the actual encrypted payload
+    let lastBase64 = '';
 
     function hashToCode(str) {
       let h = 0;
@@ -372,7 +372,7 @@
       });
     }
 
-    // Matrix Rain
+    // === MATRIX & GLITCH EFFECTS ===
     let matrixInterval;
     function startMatrixRain() {
       const canvas = document.createElement('canvas');
@@ -416,7 +416,7 @@
     function startGlitch() { document.getElementById('glitchEffect').classList.add('active'); }
     function stopGlitch() { document.getElementById('glitchEffect').classList.remove('active'); }
 
-    // Encrypt Button
+    // === ENCRYPT ===
     document.getElementById('encryptBtn').onclick = () => {
       const msg = document.getElementById('plainText').value.trim();
       const pw = document.getElementById('passwordEnc').value;
@@ -436,7 +436,7 @@
       worker.postMessage({id, action: 'encrypt', msg, pw});
     };
 
-    // Decrypt Button
+    // === DECRYPT ===
     document.getElementById('decryptBtn').onclick = () => {
       const input = document.getElementById('encryptedInput').value.trim();
       const pw = document.getElementById('passwordDec').value;
@@ -444,28 +444,18 @@
       const status = document.getElementById('decryptStatus');
       const btn = document.getElementById('decryptBtn');
 
-      if (!input || !pw) return showStatus(status, 'Enter code and password', 'error');
-
-      const digits = input.replace(/[^0-9]/g, '');
-      if (digits.length < 6) return showStatus(status, 'Invalid 6-7 digit code', 'error');
+      if (!input || !pw) return showStatus(status, 'Enter encrypted data and password', 'error');
 
       btn.classList.add('loading');
       output.value = '';
       startGlitch();
 
-      const expected = hashToCode(lastBase64 + pw);
-      if (!lastBase64 || digits !== expected) {
-        btn.classList.remove('loading');
-        stopGlitch();
-        return showStatus(status, 'Wrong code or password', 'error');
-      }
-
       const id = ++requestId;
       pending[id] = { isEncrypt: false, output, status, btn };
-      worker.postMessage({id, action: 'decrypt', enc: lastBase64, pw});
+      worker.postMessage({id, action: 'decrypt', enc: input, pw});
     };
 
-    // Copy Buttons
+    // === COPY BUTTONS ===
     document.getElementById('copyEncBtn').onclick = () => {
       const text = document.getElementById('encryptedOutput').value;
       if (!text) return showStatus(document.getElementById('encryptStatus'), 'Nothing to copy', 'error');
@@ -478,37 +468,59 @@
       copyText(text, document.getElementById('decryptStatus'));
     };
 
-    // Share Button
-    document.getElementById('shareBtn').onclick = async () => {
+    // === SHARE LINK (OPTION 2) ===
+    document.getElementById('shareBtn').onclick = () => {
       const code = document.getElementById('encryptedOutput').value.trim();
-      const password = document.getElementById('passwordEnc').value;
-      const siteUrl = 'https://encryptionkiit.netlify.app/';
+      const passwordHint = document.getElementById('passwordEnc').value;
 
-      if (!code) return showStatus(document.getElementById('encryptStatus'), 'Encrypt first', 'error');
+      if (!code || !lastBase64) {
+        return showStatus(document.getElementById('encryptStatus'), 'Encrypt first', 'error');
+      }
 
-      const shareText = `Secret Code:\n${code}\n\nPassword: ${password}\n\nOpen here: ${siteUrl}`;
+      const baseUrl = 'https://encryptionkiit.netlify.app/';
+      const url = new URL(baseUrl);
+      url.searchParams.set('data', lastBase64);
+      url.searchParams.set('code', code);
+
+      const shareUrl = url.toString();
+      const shareText = `Secret Message Link:\n${shareUrl}\n\nHint Code: ${code}\nPassword: ${passwordHint}`;
 
       if (navigator.share) {
-        try {
-          await navigator.share({ title: 'Encrypted Message', text: shareText });
-          showStatus(document.getElementById('encryptStatus'), 'Shared!', 'success');
-        } catch {
-          fallbackCopy(shareText);
-        }
+        navigator.share({ title: 'Encrypted Message', text: shareText })
+          .then(() => showStatus(document.getElementById('encryptStatus'), 'Shared!', 'success'))
+          .catch(() => fallbackCopy(shareUrl));
       } else {
-        fallbackCopy(shareText);
+        fallbackCopy(shareUrl);
       }
     };
 
     function fallbackCopy(text) {
       navigator.clipboard.writeText(text).then(() => {
-        showStatus(document.getElementById('encryptStatus'), 'Copied to clipboard!', 'success');
+        showStatus(document.getElementById('encryptStatus'), 'Link copied!', 'success');
       }).catch(() => {
         showStatus(document.getElementById('encryptStatus'), 'Copy failed', 'error');
       });
     }
 
-    // Auto-resize textareas
+    // === AUTO-FILL FROM URL (OPTION 2) ===
+    function loadFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      const data = params.get('data');
+      const code = params.get('code');
+
+      if (data) {
+        document.getElementById('encryptedInput').value = data;
+        if (code) {
+          document.getElementById('encryptedOutput').value = code;
+        }
+        showStatus(document.getElementById('decryptStatus'), 'Data loaded from link!', 'success');
+      }
+    }
+
+    // Run on page load
+    window.addEventListener('load', loadFromUrl);
+
+    // === TEXTAREA AUTO-RESIZE ===
     document.querySelectorAll('textarea').forEach(ta => {
       ta.addEventListener('input', () => {
         ta.style.height = 'auto';
@@ -516,24 +528,14 @@
       });
     });
 
-    // About Modal
+    // === ABOUT MODAL ===
     const aboutBtn = document.getElementById('aboutBtn');
     const aboutPage = document.getElementById('aboutPage');
     const closeAbout = document.getElementById('closeAbout');
 
-    aboutBtn.addEventListener('click', () => {
-      aboutPage.classList.add('open');
-    });
-
-    closeAbout.addEventListener('click', () => {
-      aboutPage.classList.remove('open');
-    });
-
-    aboutPage.addEventListener('click', (e) => {
-      if (e.target === aboutPage) {
-        aboutPage.classList.remove('open');
-      }
-    });
+    aboutBtn.addEventListener('click', () => aboutPage.classList.add('open'));
+    closeAbout.addEventListener('click', () => aboutPage.classList.remove('open'));
+    aboutPage.addEventListener('click', e => { if (e.target === aboutPage) aboutPage.classList.remove('open'); });
   </script>
 </body>
 </html>
