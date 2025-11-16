@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Secret Encryptor Pro</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+
+  <style>
+    :root {
+      --primary: #00aaff;
+      --success: #00ffaa;
+      --bg-start: #1b1b1b;
+      --bg-end: #0c0c0c;
+      --glass: rgba(255, 255, 255, 0.06);
+      --border: rgba(255, 255, 255, 0.2);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: radial-gradient(circle at top, var(--bg-start), var(--bg-end));
+      font-family: "Poppins", sans-serif;
+      color: white;
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    h1 {
+      text-align: center; margin: 30px 0 10px; font-size: 36px;
+      background: linear-gradient(135deg, #00aaff, #00ffaa);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 20px rgba(0,170,255,0.3);
+      animation: fadeIn 1s ease;
+    }
+
+    .subtitle { text-align:center; font-size:16px; opacity:.8; margin-bottom:20px; }
+
+    .container { width:90%; max-width:800px; margin:auto; padding:20px 0; flex: 1; }
+
+    .box {
+      background: var(--glass); border:1px solid var(--border);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      padding:24px; border-radius:18px; margin-bottom:28px;
+      animation: slideUp .7s ease;
+      box-shadow:0 8px 32px rgba(0,150,255,.15);
+      transition:transform .2s;
+    }
+    .box:hover { transform:translateY(-4px); }
+
+    h2 { margin:0 0 16px; font-size:22px; color:#00e0ff; }
+
+    textarea, input[type="password"] {
+      width:100%; padding:14px; margin:10px 0; border-radius:12px;
+      background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.15);
+      color:white; font-size:16px; outline:none; transition:all .3s;
+      resize:vertical; min-height:100px;
+    }
+    textarea::placeholder, input::placeholder { color:rgba(255,255,255,.5); }
+    textarea:focus, input:focus {
+      border-color:var(--primary);
+      box-shadow:0 0 12px rgba(0,170,255,.4);
+      background:rgba(255,255,255,.12);
+    }
+
+    .btn-group { display:grid; grid-template-columns:1fr; gap:10px; margin-top:12px; }
+    @media (min-width:600px) { .btn-group { grid-template-columns:2fr 1fr 1fr; } }
+
+    button {
+      padding:14px; border-radius:12px; border:none; font-size:16px;
+      font-weight:600; cursor:pointer; transition:all .3s;
+      display:flex; align-items:center; justify-content:center; gap:8px;
+    }
+    .btn-primary { background:linear-gradient(135deg,#007bff,#00d4ff); color:white; }
+    .btn-success { background:linear-gradient(135deg,#00ffaa,#00ff55); color:#000; }
+    .btn-secondary { background:rgba(255,255,255,.1); color:white; border:1px solid rgba(255,255,255,.2); }
+
+    button:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(0,212,255,.3); }
+    button:active { transform:translateY(0); }
+    button:disabled { opacity:.6; cursor:not-allowed; transform:none; }
+    .loading { opacity:.7; pointer-events:none; }
+
+    .status { margin-top:10px; font-size:14px; text-align:center; opacity:0; transition:opacity .3s; }
+    .status.show { opacity:1; }
+    .success { color:#00ffaa; }
+    .error { color:#ff6b6b; }
+
+    @keyframes fadeIn { from{opacity:0;transform:translateY(-15px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes slideUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+
+    /* Output Animation Container */
+    .output-wrapper {
+      position: relative;
+      overflow: hidden;
+      border-radius: 12px;
+      margin-top: 10px;
+    }
+
+    .output-wrapper textarea {
+      margin: 0;
+      border: none;
+      border-radius: 0;
+      background: rgba(255,255,255,.08);
+      padding: 14px;
+      min-height: 100px;
+    }
+
+    /* Matrix Rain Effect for Encryption */
+    .matrix-rain {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .matrix-rain.active {
+      opacity: 1;
+    }
+
+    .matrix-rain canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Glitch Effect for Decryption */
+    .glitch-effect {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      opacity: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 255, 170, 0.1),
+        rgba(0, 255, 170, 0.1) 1px,
+        transparent 1px,
+        transparent 2px
+      );
+      animation: glitch-scan 0.6s steps(5) infinite;
+      transition: opacity 0.3s ease;
+    }
+
+    .glitch-effect.active {
+      opacity: 1;
+    }
+
+    @keyframes glitch-scan {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(100%); }
+    }
+
+    /* Centered About Button */
+    .about-trigger {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 120px;
+      margin: 40px 0;
+    }
+
+    .about-trigger button {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid var(--border);
+      color: #00e0ff;
+      font-weight: 600;
+      font-size: 18px;
+      padding: 14px 32px;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .about-trigger button:hover {
+      background: rgba(255,255,255,0.15);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0,170,255,0.3);
+    }
+
+    /* About Page Overlay */
+    .about-page {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+
+    .about-page.open {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .about-content {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px;
+      max-width: 500px;
+      width: 90%;
+      text-align: center;
+      transform: scale(0.8);
+      transition: transform 0.5s ease;
+      box-shadow: 0 20px 50px rgba(0, 170, 255, 0.3);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    .about-page.open .about-content {
+      transform: scale(1);
+    }
+
+    .about-content h3 {
+      font-size: 28px;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, #00aaff, #00ffaa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .about-content p {
+      margin: 14px 0;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .about-content .label {
+      font-weight: 600;
+      color: #00e0ff;
+    }
+
+    .about-content a {
+      color: #00ffaa;
+      text-decoration: none;
+    }
+
+    .about-content a:hover {
+      text-decoration: underline;
+    }
+
+    .close-about {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(255,255,255,0.1);
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .close-about:hover {
+      background: rgba(255,255,255,0.2);
+      transform: rotate(90deg);
+    }
+
+    footer {
+      text-align: center;
+      padding: 30px;
+      font-size: 14px;
+      opacity: 0.6;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Secret Encryptor Pro</h1>
+  <p class="subtitle">AES-256 • Zero-Knowledge • Ultra-Fast</p>
+
+  <div class="container">
+
+    <!-- Encrypt -->
+    <div class="box">
+      <h2>Encrypt Message</h2>
+      <textarea id="plainText" placeholder="Type your secret message..."></textarea>
+      <input type="password" id="passwordEnc" placeholder="Strong password (min 8 chars)" autocomplete="new-password">
+      <div class="btn-group">
+        <button class="btn-primary" id="encryptBtn">Encrypt</button>
+        <button class="btn-success" id="copyEncBtn">Copy</button>
+        <button class="btn-secondary" id="shareBtn">Share</button>
+      </div>
+      <div class="output-wrapper">
+        <div class="matrix-rain" id="matrixRain"></div>
+        <textarea id="encryptedOutput" placeholder="Encrypted output will appear here..." readonly></textarea>
+      </div>
+      <div class="status" id="encryptStatus"></div>
+    </div>
+
+    <!-- Decrypt -->
+    <div class="box">
+      <h2>Decrypt Message</h2>
+      <textarea id="encryptedInput" placeholder="Paste encrypted text..."></textarea>
+      <input type="password" id="passwordDec" placeholder="Enter password">
+      <div class="btn-group">
+        <button class="btn-primary" id="decryptBtn">Decrypt</button>
+        <button class="btn-success" id="copyDecBtn">Copy</button>
+      </div>
+      <div class="output-wrapper">
+        <div class="glitch-effect" id="glitchEffect"></div>
+        <textarea id="decryptedOutput" placeholder="Decrypted message will appear here..." readonly></textarea>
+      </div>
+      <div class="status" id="decryptStatus"></div>
+    </div>
+
+  </div>
+
+  <!-- Centered About Button -->
+  <div class="about-trigger">
+    <button id="aboutBtn">About Developer</button>
+  </div>
+
+  <!-- About Page -->
+  <div class="about-page" id="aboutPage">
+    <div class="about-content">
+      <button class="close-about" id="closeAbout">X</button>
+      <h3>About the Developer</h3>
+      <p><span class="label">Name:</span> Rohit</p>
+      <p><span class="label">Email:</span> <a href="mailto:rohitgokarnkar2@gmail.com">rohitgokarnkar2@gmail.com</a></p>
+      <p><span class="label">Phone:</span> <a href="tel:+919606761825">+91 96067 61825</a></p>
+      <p style="margin-top:20px; font-size:14px; opacity:0.8;">
+        Built with <strong>HTML, CSS, JavaScript & CryptoJS</strong><br>
+        Uses <strong>AES-256 + PBKDF2</strong> in a Web Worker for <strong>zero lag</strong>.
+      </p>
+      <p style="font-size:13px; opacity:0.7;">
+        All encryption happens in your browser — <strong>your data never leaves your device</strong>.
+      </p>
+    </div>
+  </div>
+
+  <footer>
+    © 2025 Secret Encryptor Pro • All encryption happens locally
+  </footer>
+
+  <!-- Web Worker -->
+  <script type="text/javascript">
+    const workerCode = `
+      importScripts('https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js');
+
+      function encrypt(data) {
+        const {msg, pw} = data;
+        const salt = CryptoJS.lib.WordArray.random(16).toString();
+        const iv = CryptoJS.lib.WordArray.random(16);
+        const key = CryptoJS.PBKDF2(pw, CryptoJS.enc.Hex.parse(salt), { keySize: 8, iterations: 100000 });
+        const encrypted = CryptoJS.AES.encrypt(msg, key, { iv: iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 });
+        const payload = salt + '::' + iv.toString() + '::' + encrypted.toString();
+        return btoa(unescape(encodeURIComponent(payload)));
+      }
+
+      function decrypt(data) {
+        const {enc, pw} = data;
+        try {
+          const decoded = decodeURIComponent(escape(atob(enc)));
+          const parts = decoded.split('::');
+          if (parts.length !== 3) throw new Error('Invalid format');
+          const [salt, ivHex, cipher] = parts;
+          const key = CryptoJS.PBKDF2(pw, CryptoJS.enc.Hex.parse(salt), { keySize: 8, iterations: 100000 });
+          const iv = CryptoJS.enc.Hex.parse(ivHex);
+          const decrypted = CryptoJS.AES.decrypt(cipher, key, { iv: iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 });
+          const plain = decrypted.toString(CryptoJS.enc.Utf8);
+          if (!plain) throw new Error('Decryption failed');
+          return plain;
+        } catch (e) {
+          throw new Error('Wrong password or corrupted data');
+        }
+      }
+
+      self.onmessage = function(e) {
+        const {id, action, msg, pw, enc} = e.data;
+        try {
+          let result = action === 'encrypt' ? encrypt({msg, pw}) : decrypt({enc, pw});
+          self.postMessage({id, success: true, result});
+        } catch (err) {
+          self.postMessage({id, success: false, error: err.message || 'Failed'});
+        }
+      };
+    `;
+
+    const blob = new Blob([workerCode], { type: 'application/javascript' });
+    const worker = new Worker(URL.createObjectURL(blob));
+    let requestId = 0;
+    const pending = {};
+
+    worker.onmessage = function(e) {
+      const {id, success, result, error} = e.data;
+      const task = pending[id];
+      if (task) {
+        if (success) {
+          task.output.value = result;
+          showStatus(task.status, task.successMsg, 'success');
+          if (task.onSuccess) task.onSuccess();
+        } else {
+          showStatus(task.status, error, 'error');
+          if (task.onSuccess) task.onSuccess();
+        }
+        task.btn.classList.remove('loading');
+        delete pending[id];
+      }
+    };
+  </script>
+
+  <script>
+    function showStatus(el, msg, type = 'success') {
+      el.textContent = msg;
+      el.className = `status show ${type}`;
+      setTimeout(() => el.classList.remove('show'), 3000);
+    }
+
+    function copyText(text, statusEl) {
+      navigator.clipboard.writeText(text).then(() => {
+        showStatus(statusEl, 'Copied!', 'success');
+      }).catch(() => {
+        showStatus(statusEl, 'Copy failed', 'error');
+      });
+    }
+
+    // Matrix Rain Effect
+    let matrixInterval;
+    function startMatrixRain() {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const container = document.getElementById('matrixRain');
+      container.appendChild(canvas);
+
+      canvas.width = container.offsetWidth;
+      canvas.height = container.offsetHeight;
+
+      const matrix = "ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789@#$%^&*()*&^%+-/~{[|`]}";
+      const fontSize = 14;
+      const columns = canvas.width / fontSize;
+
+      const drops = [];
+      for (let i = 0; i < columns; i++) {
+        drops[i] = Math.floor(Math.random() * -100);
+      }
+
+      function draw() {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.fillStyle = '#00ffaa';
+        ctx.font = fontSize + 'px monospace';
+
+        for (let i = 0; i < drops.length; i++) {
+          const text = matrix[Math.floor(Math.random() * matrix.length)];
+          ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+          if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+            drops[i] = 0;
+          }
+          drops[i]++;
+        }
+      }
+
+      container.classList.add('active');
+      matrixInterval = setInterval(draw, 35);
+    }
+
+    function stopMatrixRain() {
+      document.getElementById('matrixRain').classList.remove('active');
+      clearInterval(matrixInterval);
+      setTimeout(() => {
+        const canvas = document.getElementById('matrixRain').querySelector('canvas');
+        if (canvas) canvas.remove();
+      }, 300);
+    }
+
+    // Glitch Effect
+    function startGlitch() {
+      document.getElementById('glitchEffect').classList.add('active');
+    }
+
+    function stopGlitch() {
+      document.getElementById('glitchEffect').classList.remove('active');
+    }
+
+    // Encrypt
+    document.getElementById('encryptBtn').onclick = () => {
+      const msg = document.getElementById('plainText').value.trim();
+      const pw = document.getElementById('passwordEnc').value;
+      const output = document.getElementById('encryptedOutput');
+      const status = document.getElementById('encryptStatus');
+      const btn = document.getElementById('encryptBtn');
+
+      if (!msg || !pw) return showStatus(status, 'Enter message and password', 'error');
+      if (pw.length < 8) return showStatus(status, 'Password too weak (min 8)', 'error');
+
+      btn.classList.add('loading');
+      output.value = '';
+      startMatrixRain();
+
+      const id = ++requestId;
+      pending[id] = { 
+        output, status, btn, 
+        successMsg: 'Encrypted!', 
+        onSuccess: stopMatrixRain
+      };
+      worker.postMessage({id, action: 'encrypt', msg, pw});
+    };
+
+    // Decrypt
+    document.getElementById('decryptBtn').onclick = () => {
+      const enc = document.getElementById('encryptedInput').value.trim();
+      const pw = document.getElementById('passwordDec').value;
+      const output = document.getElementById('decryptedOutput');
+      const status = document.getElementById('decryptStatus');
+      const btn = document.getElementById('decryptBtn');
+
+      if (!enc || !pw) return showStatus(status, 'Enter encrypted text and password', 'error');
+
+      btn.classList.add('loading');
+      output.value = '';
+      startGlitch();
+
+      const id = ++requestId;
+      pending[id] = { 
+        output, status, btn, 
+        successMsg: 'Decrypted!', 
+        onSuccess: stopGlitch
+      };
+      worker.postMessage({id, action: 'decrypt', enc, pw});
+    };
+
+    // Copy Buttons
+    document.getElementById('copyEncBtn').onclick = () => {
+      const text = document.getElementById('encryptedOutput').value;
+      if (!text) return showStatus(document.getElementById('encryptStatus'), 'Nothing to copy', 'error');
+      copyText(text, document.getElementById('encryptStatus'));
+    };
+
+    document.getElementById('copyDecBtn').onclick = () => {
+      const text = document.getElementById('decryptedOutput').value;
+      if (!text) return showStatus(document.getElementById('decryptStatus'), 'Nothing to copy', 'error');
+      copyText(text, document.getElementById('decryptStatus'));
+    };
+
+    // Share Button - Shares encrypted text + password + website link
+    document.getElementById('shareBtn').onclick = async () => {
+      const encryptedText = document.getElementById('encryptedOutput').value.trim();
+      const password = document.getElementById('passwordEnc').value;
+      const siteUrl = 'https://encryptionkit.netlify.app';
+
+      if (!encryptedText) {
+        return showStatus(document.getElementById('encryptStatus'), 'Encrypt first', 'error');
+      }
+
+      const shareText = `Secret Message:\n\n${encryptedText}\n\nPassword: ${password}\n\nOpen here: ${siteUrl}`;
+
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: 'Encrypted Message',
+            text: shareText
+          });
+          showStatus(document.getElementById('encryptStatus'), 'Shared!', 'success');
+        } catch (err) {
+          fallbackCopy(shareText);
+        }
+      } else {
+        fallbackCopy(shareText);
+      }
+    };
+
+    // Fallback: Copy to clipboard if native share fails
+    function fallbackCopy(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        showStatus(document.getElementById('encryptStatus'), 'Copied to clipboard!', 'success');
+      }).catch(() => {
+        showStatus(document.getElementById('encryptStatus'), 'Copy failed', 'error');
+      });
+    }
+
+    // Auto-resize textareas
+    document.querySelectorAll('textarea').forEach(ta => {
+      ta.addEventListener('input', () => {
+        ta.style.height = 'auto';
+        ta.style.height = ta.scrollHeight + 'px';
+      });
+    });
+
+    // About Page
+    const aboutBtn = document.getElementById('aboutBtn');
+    const aboutPage = document.getElementById('aboutPage');
+    const closeAbout = document.getElementById('closeAbout');
+
+    aboutBtn.addEventListener('click', () => {
+      aboutPage.classList.add('open');
+    });
+
+    closeAbout.addEventListener('click', () => {
+      aboutPage.classList.remove('open');
+    });
+
+    aboutPage.addEventListener('click', (e) => {
+      if (e.target === aboutPage) {
+        aboutPage.classList.remove('open');
+      }
+    });
+  </script>
+</body>
+</html>
